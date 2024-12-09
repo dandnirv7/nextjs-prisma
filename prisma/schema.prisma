@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid()) 
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @relation(fields: [roleId], references: [id])
+  roleId    Int
+  reviews   Review[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id           Int        @id @default(autoincrement())
+  rating       Float
+  text         String
+  user         User       @relation(fields: [userId], references: [id])
+  userId       String     
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Restaurant {
+  id          Int         @id @default(autoincrement())
+  name        String
+  rating      Float
+  price       PriceRange
+  openNow     Boolean
+  location    Location    @relation(fields: [locationId], references: [id])
+  locationId  Int
+  categories  Category[]  @relation("RestaurantCategories")
+  reviews     Review[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Category {
+  id           Int          @id @default(autoincrement())
+  name         String
+  restaurants  Restaurant[] @relation("RestaurantCategories")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Location {
+  id        Int   @id @default(autoincrement())
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Restaurant Restaurant[]
+}
+
+enum PriceRange {
+  Cheap       @map("$")
+  Moderate    @map("$$")
+  Expensive   @map("$$$")
+  VeryExpensive
+}
