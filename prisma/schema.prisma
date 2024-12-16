@@ -7,22 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Users {
   id        String   @id @default(cuid()) 
   email     String   @unique
   password  String
   name      String?
-  role      Role     @relation(fields: [roleId], references: [id])
+  role      Roles     @relation(fields: [roleId], references: [id])
   roleId    Int
   reviews   Review[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Role {
+model Roles {
   id        Int      @id @default(autoincrement())
   name      String   @unique
-  users     User[]
+  users     Users[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -31,7 +31,7 @@ model Review {
   id           Int        @id @default(autoincrement())
   rating       Float
   text         String
-  user         User       @relation(fields: [userId], references: [id])
+  user         Users       @relation(fields: [userId], references: [id])
   userId       String     
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
   restaurantId Int
@@ -44,19 +44,19 @@ model Restaurant {
   name        String
   rating      Float
   price       PriceRange
-  openNow     Boolean
   location    Location    @relation(fields: [locationId], references: [id])
   locationId  Int
-  categories  Category[]  @relation("RestaurantCategories")
+  categories  Categories[] @relation("restaurantCategories")
   reviews     Review[]
+  openingHours Json
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
 
-model Category {
+model Categories {
   id           Int          @id @default(autoincrement())
   name         String
-  restaurants  Restaurant[] @relation("RestaurantCategories")
+  restaurants  Restaurant[] @relation("restaurantCategories")
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
@@ -68,12 +68,12 @@ model Location {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Restaurant Restaurant[]
+  restaurants Restaurant[]  
 }
 
 enum PriceRange {
   Cheap       @map("$")
   Moderate    @map("$$")
   Expensive   @map("$$$")
-  VeryExpensive
+  VeryExpensive @map("$$$$")
 }
