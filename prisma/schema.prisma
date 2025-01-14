@@ -3,77 +3,72 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+enum RoleName {
+  admin
+  user
+}
+
+enum Categories {
+  food
+  beverages
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        RoleName
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+  
+  users       Users[]
+
+  @@index([name])  
+}
+
 model Users {
-  id        String   @id @default(cuid()) 
-  email     String   @unique
-  password  String
-  name      String?
-  role      Roles     @relation(fields: [roleId], references: [id])
-  roleId    Int
-  reviews   Review[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
+  username      String       @unique
+  fullName      String
+  password      String
+  roleId        Int         @map("role_id")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @default(now()) @map("updated_at")
+  deletedAt     DateTime?    @map("deleted_at")  
+
+  role          Role         @relation(fields: [roleId], references: [id])
+  refreshToken  RefreshToken[]
+
+  @@index([roleId])  
 }
 
-model Roles {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  users     Users[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model RefreshToken {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique
+  userId      Int      @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+  expiresAt   DateTime @map("expires_at")
+
+  user        Users    @relation(fields: [userId], references: [id])
+
+  @@index([userId])  
 }
 
-model Review {
-  id           Int        @id @default(autoincrement())
-  rating       Float
-  text         String
-  user         Users       @relation(fields: [userId], references: [id])
-  userId       String     
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
-  restaurantId Int
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-}
-
-model Restaurant {
-  id          Int         @id @default(autoincrement())
+model Menu {
+  id          Int        @id @default(autoincrement())
+  category    Categories
   name        String
-  rating      Float
-  price       PriceRange
-  location    Location    @relation(fields: [locationId], references: [id])
-  locationId  Int
-  categories  Categories[] @relation("restaurantCategories")
-  reviews     Review[]
-  openingHours Json
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-}
+  price       Float
+  description String
+  imageUrl    String     @map("image_url")
+  status      Boolean    @default(true)  
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @default(now()) @map("updated_at")
+  deletedAt   DateTime?  @map("deleted_at")  
 
-model Categories {
-  id           Int          @id @default(autoincrement())
-  name         String
-  restaurants  Restaurant[] @relation("restaurantCategories")
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-}
-
-model Location {
-  id        Int   @id @default(autoincrement())
-  latitude  Float
-  longitude Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  restaurants Restaurant[]  
-}
-
-enum PriceRange {
-  Cheap       @map("$")
-  Moderate    @map("$$")
-  Expensive   @map("$$$")
-  VeryExpensive @map("$$$$")
+  @@index([category])  
 }
