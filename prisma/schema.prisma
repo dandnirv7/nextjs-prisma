@@ -34,7 +34,7 @@ model Users {
   username      String       @unique
   fullName      String
   password      String
-  roleId        Int         @map("role_id")
+  roleId        Int          @map("role_id") @default(2)
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @default(now()) @map("updated_at")
   deletedAt     DateTime?    @map("deleted_at")  
