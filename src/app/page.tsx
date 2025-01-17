@@ -1,6 +1,6 @@
 import MenuList from "@/components/MenuList";
 import Sidebar from "@/components/Sidebar";
-import { fetchMenus, getCategories } from "@/lib/utils";
+import { fetchMenus, getCategories } from "@/lib/api";
 
 const page = async () => {
   const allMenus = await fetchMenus();

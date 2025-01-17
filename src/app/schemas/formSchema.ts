@@ -7,9 +7,14 @@ export const FormSchema = z.object({
   category: z.string().min(1, {
     message: "Category is required.",
   }),
-  price: z.number().min(0, {
-    message: "Price must be between 0 and 100.",
-  }),
+  price: z
+    .number()
+    .min(0, {
+      message: "The price must be greater than 0",
+    })
+    .max(1000000, {
+      message: "The price cannot exceed 1.000.000",
+    }),
   description: z.string().min(5, {
     message: "Description must be at least 5 characters.",
   }),
