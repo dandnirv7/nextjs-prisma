@@ -3,10 +3,13 @@ import {
   handleError,
   handleValidationError,
 } from "@/utils/errorHandler";
+import { ERROR_MESSAGES } from "@/utils/errorMessage";
 import { hashPassword } from "@/utils/hashPassword";
+import sanitizeData from "@/utils/sanitize";
+import { userSelect } from "@/utils/selectOptions";
 import prisma from "db/client";
 import { NextResponse } from "next/server";
-import { UserSchema } from "schemas/userSchema";
+import { UserData, UserSchema } from "schemas/userSchema";
 
 export async function GET() {
   try {
@@ -14,12 +17,7 @@ export async function GET() {
       where: {
         deletedAt: null,
       },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        fullName: true,
-      },
+      select: userSelect,
     });
 
     return NextResponse.json(
@@ -31,30 +29,29 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error) {
-    return handleError(error, "Failed to proccess request");
+    return handleError(error, ERROR_MESSAGES.PROCESS_FAILED);
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body: UserData = await request.json();
+    const validatedData = sanitizeData(body, UserSchema);
 
-    const result = UserSchema.safeParse(body);
+    const result = UserSchema.safeParse(validatedData);
 
     if (!result.success) {
       return handleValidationError(result.error);
     }
 
-    const validateData = result.data;
-
     const existingUser = await prisma.users.findFirst({
       where: {
         OR: [
           {
-            username: validateData.username,
+            username: validatedData.username,
           },
           {
-            email: validateData.username,
+            email: validatedData.email,
           },
         ],
         deletedAt: null,
@@ -62,15 +59,15 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      throw new Error("USERNAME_EMAIL_EXISTS");
+      handleCustomError(ERROR_MESSAGES.USERNAME_EMAIL_EXISTS, 409);
     }
 
-    if (validateData.password) {
-      validateData.password = await hashPassword(validateData.password);
+    if (validatedData.password) {
+      validatedData.password = await hashPassword(validatedData.password);
     }
 
     const user = await prisma.users.create({
-      data: validateData,
+      data: validatedData,
       select: {
         id: true,
         username: true,
@@ -88,9 +85,6 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "USERNAME_EMAIL_EXISTS") {
-      return handleCustomError("Username or Email already exists", 409);
-    }
-    return handleError(error, "Error creating user");
+    return handleError(error, ERROR_MESSAGES.CREATE_FAILED);
   }
 }

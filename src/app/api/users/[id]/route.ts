@@ -3,7 +3,10 @@ import {
   handleError,
   handleValidationError,
 } from "@/utils/errorHandler";
+import { ERROR_MESSAGES } from "@/utils/errorMessage";
 import { hashPassword } from "@/utils/hashPassword";
+import sanitizeData from "@/utils/sanitize";
+import { userSelect } from "@/utils/selectOptions";
 import prisma from "db/client";
 import { NextResponse } from "next/server";
 import { UserSchema } from "schemas/userSchema";
@@ -16,35 +19,30 @@ export async function GET(
     const id = Number(params.id);
 
     if (isNaN(id)) {
-      return handleCustomError("Invalid ID format", 400);
+      return handleCustomError(ERROR_MESSAGES.INVALID_ID, 400);
     }
 
-    const userExist = await prisma.users.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: {
         id: id,
       },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        fullName: true,
-      },
+      select: userSelect,
     });
 
-    if (!userExist) {
-      return handleCustomError("User not found", 404);
+    if (!existingUser) {
+      return handleCustomError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
     }
 
     return NextResponse.json(
       {
         success: true,
-        data: userExist,
+        data: existingUser,
         message: "User retrieved successfully",
       },
       { status: 200 }
     );
   } catch (error) {
-    return handleError(error, "Failed to proccess request");
+    return handleError(error, ERROR_MESSAGES.PROCESS_FAILED);
   }
 }
 
@@ -56,30 +54,21 @@ export async function PUT(
     const id = Number(params.id);
 
     if (isNaN(id)) {
-      return handleCustomError("Invalid ID format", 400);
-    }
-
-    const userExist = await prisma.users.findUnique({
-      where: {
-        id: id,
-      },
-    });
-
-    if (!userExist) {
-      return handleCustomError("User not found", 404);
+      return handleCustomError(ERROR_MESSAGES.INVALID_ID, 400);
     }
 
     const body = await request.json();
+    const sanitizedData = sanitizeData(body, UserSchema.partial());
 
-    const result = UserSchema.safeParse(body);
+    const result = UserSchema.partial().safeParse(sanitizedData);
 
     if (!result.success) {
       return handleValidationError(result.error);
     }
 
-    const validateData = result.data;
+    const validatedData = result.data;
 
-    const user = await prisma.$transaction(async (prisma) => {
+    await prisma.$transaction(async (prisma) => {
       const existingUser = await prisma.users.findFirst({
         where: {
           id,
@@ -88,15 +77,15 @@ export async function PUT(
       });
 
       if (!existingUser) {
-        throw new Error("USER_NOT_FOUND");
+        handleCustomError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
       }
     });
 
-    const duplicateCheck = await prisma.users.findFirst({
+    const checkDuplicate = await prisma.users.findFirst({
       where: {
         OR: [
-          { username: validateData.username },
-          { email: validateData.email },
+          { username: validatedData.username },
+          { email: validatedData.email },
         ],
         NOT: {
           id,
@@ -105,45 +94,32 @@ export async function PUT(
       },
     });
 
-    if (duplicateCheck) {
-      throw new Error("USERNAME_EMAIL_EXISTS");
+    if (checkDuplicate) {
+      handleCustomError(ERROR_MESSAGES.USERNAME_EMAIL_EXISTS, 409);
     }
 
-    if (validateData.password) {
-      validateData.password = await hashPassword(validateData.password);
+    if (validatedData.password) {
+      validatedData.password = await hashPassword(validatedData.password);
     }
 
-    await prisma.users.update({
+    const updatedUser = await prisma.users.update({
       where: {
         id,
       },
-      data: validateData,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        fullName: true,
-      },
+      data: validatedData,
+      select: userSelect,
     });
 
     return NextResponse.json(
       {
         success: true,
-        data: user,
+        data: updatedUser,
         message: "User successfully update",
       },
       { status: 200 }
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "USER_NOT_FOUND") {
-      return handleCustomError("User not found", 404);
-    }
-
-    if (error instanceof Error && error.message === "USERNAME_EMAIL_EXIST") {
-      return handleCustomError("Username or Email already exists", 409);
-    }
-
-    return handleError(error, "Failed to update user");
+    return handleError(error, ERROR_MESSAGES.UPDATE_FAILED);
   }
 }
 
@@ -156,18 +132,20 @@ export async function PATCH(
     const body = await request.json();
 
     if (isNaN(id)) {
-      return handleCustomError("Invalid ID format", 400);
+      return handleCustomError(ERROR_MESSAGES.INVALID_ID, 400);
     }
 
-    const result = UserSchema.partial().safeParse(body);
+    const sanitizedData = sanitizeData(body, UserSchema.partial());
+
+    const result = UserSchema.partial().safeParse(sanitizedData);
 
     if (!result.success) {
       return handleValidationError(result.error);
     }
 
-    const validateData = result.data;
+    const validatedData = result.data;
 
-    const user = await prisma.$transaction(async (prisma) => {
+    await prisma.$transaction(async (prisma) => {
       const existingUser = await prisma.users.findFirst({
         where: {
           id,
@@ -176,16 +154,16 @@ export async function PATCH(
       });
 
       if (!existingUser) {
-        throw new Error("USER_NOT_FOUND");
+        handleCustomError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
       }
     });
 
-    if (validateData.email || validateData.username) {
+    if (validatedData.email || validatedData.username) {
       const checkDuplicate = await prisma.users.findFirst({
         where: {
           OR: [
-            validateData.email ? { email: validateData.email } : {},
-            validateData.username ? { username: validateData.username } : {},
+            validatedData.email ? { email: validatedData.email } : {},
+            validatedData.username ? { username: validatedData.username } : {},
           ],
           NOT: {
             id,
@@ -194,44 +172,31 @@ export async function PATCH(
         },
       });
 
-      if (!checkDuplicate) {
-        throw new Error("USERNAME_EMAIL_EXISTS");
+      if (checkDuplicate) {
+        handleCustomError(ERROR_MESSAGES.USERNAME_EMAIL_EXISTS, 409);
       }
     }
 
-    if (validateData.password) {
-      validateData.password = await hashPassword(validateData.password);
+    if (validatedData.password) {
+      validatedData.password = await hashPassword(validatedData.password);
     }
 
-    await prisma.users.update({
+    const updatedUser = await prisma.users.update({
       where: { id },
-      data: validateData,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        fullName: true,
-      },
+      data: validatedData,
+      select: userSelect,
     });
 
     return NextResponse.json(
       {
         success: true,
-        data: user,
+        data: updatedUser,
         message: "User updated successfully",
       },
       { status: 200 }
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "USER_NOT_FOUND") {
-      return handleCustomError("User not found", 404);
-    }
-
-    if (error instanceof Error && error.message === "USERNAME_EMAIL_EXISTS") {
-      return handleCustomError("Username or Email already exists", 409);
-    }
-
-    return handleError(error, "Failed to update user");
+    return handleError(error, ERROR_MESSAGES.UPDATE_FAILED);
   }
 }
 
@@ -243,28 +208,31 @@ export async function DELETE(
     const id = Number(params.id);
 
     if (isNaN(id)) {
-      return handleCustomError("Invalid ID format", 400);
+      return handleCustomError(ERROR_MESSAGES.INVALID_ID, 400);
     }
 
     const user = await prisma.$transaction(async (prisma) => {
-      const existingUser = await prisma.users.findUnique({
-        where: { id, deletedAt: null },
+      const existingUser = await prisma.users.findFirst({
+        where: {
+          id: id,
+          deletedAt: null,
+        },
       });
 
       if (!existingUser) {
-        throw new Error("USER_NOT_FOUND");
+        handleCustomError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
       }
-    });
 
-    await prisma.users.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-      },
-      select: {
-        email: true,
-        username: true,
-      },
+      return await prisma.users.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+        },
+        select: {
+          email: true,
+          username: true,
+        },
+      });
     });
 
     return NextResponse.json(
@@ -273,12 +241,9 @@ export async function DELETE(
         message: "User deleted successfully",
         data: user,
       },
-      { status: 204 }
+      { status: 200 }
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "USER_NOT_FOUND") {
-      return handleCustomError("User not found", 404);
-    }
-    return handleError(error, "Failed to delete user");
+    return handleError(error, ERROR_MESSAGES.DELETE_FAILED);
   }
 }
