@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { AuthUser } from "./types";
 
 export interface SessionData {
+  save(): unknown;
   user?: AuthUser;
   isLoggedIn: boolean;
 }
@@ -16,7 +17,7 @@ const sessionOptions = {
   },
 };
 
-export async function getSession() {
+export async function getSession(): Promise<SessionData> {
   const cookieStore = await cookies();
 
   const session = await getIronSession<SessionData>(
@@ -24,9 +25,19 @@ export async function getSession() {
     sessionOptions
   );
 
-  if (!session.isLoggedIn) {
-    session.isLoggedIn = false;
-  }
+  session.isLoggedIn = session.isLoggedIn ?? false;
 
   return session;
+}
+
+export async function destroySession(): Promise<void> {
+  const cookieStore = await cookies();
+
+  const session = await getIronSession<SessionData>(
+    cookieStore,
+    sessionOptions
+  );
+
+  session.isLoggedIn = false;
+  await session.save();
 }

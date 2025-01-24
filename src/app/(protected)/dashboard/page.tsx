@@ -1,9 +1,10 @@
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { ClientDashboard } from "@/components/ClientDashboard";
 
-export default async function DashboardPage() {
+export default function DashboardPage() {
   return (
     <AuthGuard requiredRole="admin">
-      <div>Dashboard Content</div>
+      <ClientDashboard />
     </AuthGuard>
   );
 }
