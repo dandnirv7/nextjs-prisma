@@ -223,11 +223,8 @@ export async function DELETE(
         handleCustomError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
       }
 
-      return await prisma.users.update({
+      return await prisma.users.delete({
         where: { id },
-        data: {
-          deletedAt: new Date(),
-        },
         select: {
           email: true,
           username: true,

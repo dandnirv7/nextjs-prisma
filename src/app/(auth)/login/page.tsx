@@ -1,31 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+
+import { LoginFormInner } from "@/components/auth/LoginFormInner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
+import { type AuthCredentials, authSchema } from "@/schemas/auth";
+import { ERROR_MESSAGES } from "@/utils/errorMessage";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+
+  const form = useForm<AuthCredentials>({
+    resolver: zodResolver(authSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  async function handleLoginSubmit(values: AuthCredentials) {
+    setIsLoading(true);
     setError("");
 
     try {
@@ -34,13 +35,13 @@ export default function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(values),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        throw new Error(data.message || "Login Failed");
       }
 
       if (data.data?.sessionId) {
@@ -49,61 +50,37 @@ export default function LoginPage() {
 
       router.push("/dashboard");
       router.refresh();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Login failed");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(ERROR_MESSAGES.LOGIN_FAILED);
+      } else {
+        setError(String(error));
+      }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center ">
+      <Card className="mx-auto min-w-[480px] max-w-[480px]">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Login
-          </CardTitle>
+          <CardTitle className="text-2xl text-center">Login</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} method="POST" className="space-y-4">
-            {error && <>{error}</>}
-
-            <div className="space-y-2">
-              <label htmlFor="username" className="block text-sm font-medium">
-                Username
-              </label>
-              <Input
-                id="username"
-                name="username"
-                type="text"
-                required
-                value={formData.username}
-                onChange={handleChange}
-                className="w-full"
-                disabled={loading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium">
-                Password
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full"
-                disabled={loading}
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
-            </Button>
-          </form>
+          <Form {...form}>
+            <LoginFormInner
+              onLoginSubmit={handleLoginSubmit}
+              loading={isLoading}
+              error={error}
+            />
+          </Form>
+          <div className="mt-4 text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="underline text-blue-500">
+              Sign up
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

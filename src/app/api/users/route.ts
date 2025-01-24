@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      handleCustomError(ERROR_MESSAGES.USERNAME_EMAIL_EXISTS, 409);
+      return handleCustomError(ERROR_MESSAGES.USERNAME_EMAIL_EXISTS, 409);
     }
 
     if (validatedData.password) {
