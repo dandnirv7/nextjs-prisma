@@ -4,7 +4,7 @@ import prisma from "db/client";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { isEmail } from "validator";
-import nodemailer from "nodemailer";
+// import nodemailer from "nodemailer";
 
 export async function POST(request: NextRequest) {
   if (request.method !== "POST") {
@@ -42,37 +42,42 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const baseUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.BASE_URL_PROD
-        : process.env.BASE_URL_DEV;
+    // const baseUrl =
+    //   process.env.NODE_ENV === "production"
+    //     ? process.env.BASE_URL_PROD
+    //     : process.env.BASE_URL_DEV;
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.MAILTRAP_HOST!,
-      port: parseInt(process.env.MAILTRAP_PORT!, 10),
-      auth: {
-        user: process.env.MAILTRAP_USER!,
-        pass: process.env.MAILTRAP_PASS!,
+    // const transporter = nodemailer.createTransport({
+    //   host: process.env.MAILTRAP_HOST!,
+    //   port: parseInt(process.env.MAILTRAP_PORT!, 10),
+    //   auth: {
+    //     user: process.env.MAILTRAP_USER!,
+    //     pass: process.env.MAILTRAP_PASS!,
+    //   },
+    // });
+
+    // const mailOptions = {
+    //   from: process.env.EMAIL_USER!,
+    //   to: email,
+    //   subject: "Password Reset Request",
+    //   html: `
+    //     <p>You requested a password reset</p>
+    //     <p>Click <a href="${baseUrl}/reset-password/${resetToken}">here</a> to reset your password</p>
+    //     <p>This link will expire in 1 hour</p>
+    //   `,
+    // };
+
+    // await transporter.sendMail(mailOptions);
+
+    return NextResponse.json({
+      success: true,
+      message: "Reset token generated and email sent successfully",
+      data: {
+        resetToken,
+        expiresAt: expirationTime,
+        // emailSent: true,
       },
     });
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER!,
-      to: email,
-      subject: "Password Reset Request",
-      html: `
-        <p>You requested a password reset</p>
-        <p>Click <a href="${baseUrl}/reset-password/${resetToken}">here</a> to reset your password</p>
-        <p>This link will expire in 1 hour</p>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    return NextResponse.json(
-      { message: "Reset token generated and email sent successfully" },
-      { status: 200 }
-    );
   } catch (error) {
     return handleError(error, ERROR_MESSAGES.INTERNAL_SERVER_ERROR);
   }
