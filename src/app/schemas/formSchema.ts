@@ -1,11 +1,13 @@
 import { z } from "zod";
 
+export const CategoryEnum = ["food", "beverages"] as const;
+
 export const FormSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
   }),
-  category: z.string().min(1, {
-    message: "Category is required.",
+  category: z.enum(CategoryEnum, {
+    message: "Category must be one of food, or beverages.",
   }),
   price: z
     .number()

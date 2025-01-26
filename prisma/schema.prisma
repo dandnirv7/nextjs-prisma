@@ -7,55 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum RoleName {
-  admin
-  user
-}
-
-enum Categories {
-  food
-  beverages
-}
-
 model Role {
-  id          Int      @id @default(autoincrement())
-  name        RoleName
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @map("updated_at")
-  
-  users       Users[]
+  id        Int      @id @default(autoincrement())
+  name      RoleName  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  users     Users[]
 
-  @@index([name])  
+  @@index([name])
 }
 
 model Users {
-  id            Int          @id @default(autoincrement())
-  email         String       @unique
-  username      String       @unique
-  fullName      String
-  password      String
-  roleId        Int          @map("role_id") @default(2)
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @default(now()) @map("updated_at")
-  deletedAt     DateTime?    @map("deleted_at")  
+  id                Int             @id @default(autoincrement())
+  email             String          @unique
+  username          String          @unique
+  fullName          String  
+  password          String  
+  roleId            Int             @default(2) @map("role_id")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @default(now()) @map("updated_at")
+  deletedAt         DateTime?       @map("deleted_at")
+  refreshToken      RefreshToken[]  
+  role              Role            @relation(fields: [roleId], references: [id])
+  resetToken        String?
+  resetTokenExpires DateTime?
 
-  role          Role         @relation(fields: [roleId], references: [id])
-  refreshToken  RefreshToken[]
+  session           Session[]
 
-  @@index([roleId])  
+  @@index([roleId])
 }
 
 model RefreshToken {
-  id          Int      @id @default(autoincrement())
-  token       String   @unique
-  userId      Int      @map("user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @map("updated_at")
-  expiresAt   DateTime @map("expires_at")
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  expiresAt DateTime @map("expires_at")
+  user      Users    @relation(fields: [userId], references: [id])
 
-  user        Users    @relation(fields: [userId], references: [id])
-
-  @@index([userId])  
+  @@index([userId])
 }
 
 model Menu {
@@ -64,11 +55,34 @@ model Menu {
   name        String
   price       Float
   description String
-  imageUrl    String     @map("image_url")
-  status      Boolean    @default(true)  
+  imageUrl    String?    @map("image_url")
+  status      Boolean    @default(true)
+  stock       Int        @default(0)
   createdAt   DateTime   @default(now()) @map("created_at")
   updatedAt   DateTime   @default(now()) @map("updated_at")
-  deletedAt   DateTime?  @map("deleted_at")  
+  deletedAt   DateTime?  @map("deleted_at")
 
-  @@index([category])  
+  @@index([category])
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @unique  
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  expiresAt DateTime @map("expires_at")
+  user      Users    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+enum RoleName {
+  admin
+  user
+}
+
+enum Categories {
+  food
+  beverages
 }
