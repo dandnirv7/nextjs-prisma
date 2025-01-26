@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { LoginFormInner } from "@/components/auth/LoginFormInner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-import { type AuthCredentials, authSchema } from "@/schemas/auth";
+import { type AuthData, authSchema } from "@/schemas/auth";
 import { ERROR_MESSAGES } from "@/utils/errorMessage";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
-  const form = useForm<AuthCredentials>({
+  const form = useForm<AuthData>({
     resolver: zodResolver(authSchema),
     defaultValues: {
       username: "",
@@ -25,7 +25,7 @@ export default function LoginPage() {
     },
   });
 
-  async function handleLoginSubmit(values: AuthCredentials) {
+  async function handleLoginSubmit(values: AuthData) {
     setIsLoading(true);
     setError("");
 

@@ -21,13 +21,16 @@ export const ButtonLogout = () => {
       });
 
       if (response.ok) {
-        toast(NOTIFICATION_MESSAGES.success);
+        toast({
+          title: "Success",
+          description: NOTIFICATION_MESSAGES.success.logout.message,
+        });
         router.push("/login");
       } else {
         const errorData = await response.json();
         toast({
-          title: NOTIFICATION_MESSAGES.error.title,
-          description: NOTIFICATION_MESSAGES.error.logoutFailed(
+          title: NOTIFICATION_MESSAGES.error.logout.title,
+          description: NOTIFICATION_MESSAGES.error.logout.message(
             errorData.message || "Unknown error occurred"
           ),
         });
@@ -35,8 +38,10 @@ export const ButtonLogout = () => {
     } catch (error) {
       if (error instanceof Error) {
         toast({
-          title: NOTIFICATION_MESSAGES.error.title,
-          description: NOTIFICATION_MESSAGES.error.networkError(error.message),
+          title: NOTIFICATION_MESSAGES.error.logout.title,
+          description: NOTIFICATION_MESSAGES.error.networkError.message(
+            error.message
+          ),
         });
       }
     } finally {

@@ -3,7 +3,7 @@
 import { RegisterFormInner } from "@/components/auth/RegisterFormInner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-import { RegisterCredentials, registerSchema } from "@/schemas/auth";
+import { type RegisterData, registerSchema } from "@/schemas/auth";
 import { ERROR_MESSAGES } from "@/utils/errorMessage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -16,11 +16,11 @@ export default function RegisterPage() {
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const form = useForm<RegisterCredentials>({
+  const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
   });
 
-  async function handleRegisterSubmit(values: RegisterCredentials) {
+  async function handleRegisterSubmit(values: RegisterData) {
     setIsLoading(true);
     setError("");
 
