@@ -10,18 +10,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { RegisterCredentials } from "@/schemas/auth";
+import { type RegisterData } from "@/schemas/auth";
 import { useFormContext } from "react-hook-form";
 import AlertComponent from "@/components/AlertComponent";
 
 type RegisterFormInnerProps = {
-  onRegisterSubmit: (values: RegisterCredentials) => void;
+  onRegisterSubmit: (values: RegisterData) => void;
   loading: boolean;
   error: string;
 };
 
 export const RegisterFormInner = (props: RegisterFormInnerProps) => {
-  const form = useFormContext<RegisterCredentials>();
+  const form = useFormContext<RegisterData>();
 
   return (
     <form

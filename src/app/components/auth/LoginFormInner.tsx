@@ -12,16 +12,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { AuthCredentials } from "@/schemas/auth";
+import { type AuthData } from "@/schemas/auth";
 
 type LoginFormInnerProps = {
-  onLoginSubmit: (values: AuthCredentials) => void;
+  onLoginSubmit: (values: AuthData) => void;
   loading: boolean;
   error: string;
 };
 
 export const LoginFormInner = (props: LoginFormInnerProps) => {
-  const form = useFormContext<AuthCredentials>();
+  const form = useFormContext<AuthData>();
 
   return (
     <form
@@ -57,7 +57,7 @@ export const LoginFormInner = (props: LoginFormInnerProps) => {
               <div className="flex justify-between items-center">
                 <FormLabel htmlFor="password">Password</FormLabel>
                 <Link
-                  href="#"
+                  href="/forgot-password"
                   className="ml-auto inline-block text-sm underline"
                 >
                   Forgot your password?

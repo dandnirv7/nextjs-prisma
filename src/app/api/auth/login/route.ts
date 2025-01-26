@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth/session";
 import { handleError } from "@/utils/errorHandler";
+import { ERROR_MESSAGES } from "@/utils/errorMessage";
 import { generateToken } from "@/utils/token";
 import { compare } from "bcrypt";
 import prisma from "db/client";
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid credentials",
+          message: ERROR_MESSAGES.LOGIN_FAILED,
         },
         {
           status: 401,
@@ -81,6 +82,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleError(error, "Internal server error");
+    return handleError(error, ERROR_MESSAGES.INTERNAL_SERVER_ERROR);
   }
 }
