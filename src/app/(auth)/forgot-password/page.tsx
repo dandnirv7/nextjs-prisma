@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "hooks/use-toast";
 import { type ForgotPasswordData, forgotPasswordSchema } from "@/schemas/auth";
 import { NOTIFICATION_MESSAGES } from "@/utils/errorMessage";
 import { zodResolver } from "@hookform/resolvers/zod";

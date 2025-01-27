@@ -26,6 +26,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "assets.tmecosys.com",
       },
+      {
+        protocol: "https",
+        hostname: "utfs.io",
+        port: "",
+      },
+      {
+        protocol: "https",
+        hostname: "api.slingacademy.com",
+        port: "",
+      },
     ],
   },
 };
