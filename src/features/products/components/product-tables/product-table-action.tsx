@@ -3,10 +3,8 @@
 import { DataTableFilterBox } from "@/components/ui/table/data-table-filter-box";
 import { DataTableResetFilter } from "@/components/ui/table/data-table-reset-filter";
 import { DataTableSearch } from "@/components/ui/table/data-table-search";
-import {
-  CATEGORY_OPTIONS,
-  useProductTableFilters,
-} from "./use-product-table-filters";
+import { useProductTableFilters } from "./use-product-table-filters";
+import { CATEGORY_OPTIONS } from "@/constants/categoryOptions";
 
 export default function ProductTableAction() {
   const {

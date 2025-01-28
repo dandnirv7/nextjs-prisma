@@ -1,17 +1,7 @@
-import MenuList from "@/components/MenuList";
-import Sidebar from "@/components/Sidebar";
-import { fetchMenus, getCategories } from "@/lib/api";
+import React from "react";
 
-const page = async () => {
-  const allMenus = await fetchMenus();
-  const categories = getCategories(allMenus);
-
-  return (
-    <main className="grid grid-cols-12 gap-4">
-      <Sidebar categories={categories} />
-      <MenuList menuItems={allMenus} />
-    </main>
-  );
+const page = () => {
+  return <>Homepage</>;
 };
 
 export default page;

@@ -76,7 +76,7 @@ export function DataTableFilterBox({
               <Separator orientation="vertical" className="mx-2 h-4" />
               <Badge
                 variant="secondary"
-                className="rounded-sm px-1 font-normal lg:hidden"
+                className="rounded-sm capitalize px-1 font-normal lg:hidden"
               >
                 {selectedValuesSet.size}
               </Badge>
@@ -84,7 +84,7 @@ export function DataTableFilterBox({
                 {selectedValuesSet.size > 2 ? (
                   <Badge
                     variant="secondary"
-                    className="rounded-sm px-1 font-normal"
+                    className="rounded-sm capitalize px-1 font-normal"
                   >
                     {selectedValuesSet.size} selected
                   </Badge>
@@ -93,7 +93,7 @@ export function DataTableFilterBox({
                     <Badge
                       variant="secondary"
                       key={value}
-                      className="rounded-sm px-1 font-normal"
+                      className="rounded-sm capitalize px-1 font-normal"
                     >
                       {options.find((option) => option.value === value)
                         ?.label || value}
@@ -110,7 +110,7 @@ export function DataTableFilterBox({
           <CommandInput placeholder={title} />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup>
+            <CommandGroup className="capitalize">
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
@@ -132,7 +132,7 @@ export function DataTableFilterBox({
                       aria-hidden="true"
                     />
                   )}
-                  <span>{option.label}</span>
+                  <span className="capitalize">{option.label}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
