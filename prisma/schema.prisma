@@ -7,34 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Role {
-  id        Int      @id @default(autoincrement())
-  name      RoleName  
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
-  users     Users[]
-
-  @@index([name])
-}
-
 model Users {
-  id                Int             @id @default(autoincrement())
-  email             String          @unique
-  username          String          @unique
-  fullName          String  
-  password          String  
-  roleId            Int             @default(2) @map("role_id")
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @default(now()) @map("updated_at")
-  deletedAt         DateTime?       @map("deleted_at")
-  refreshToken      RefreshToken[]  
-  role              Role            @relation(fields: [roleId], references: [id])
+  id                Int            @id @default(autoincrement())
+  email             String         @unique
+  username          String         @unique
+  fullName          String
+  password          String
+  status            Status         @default(active)
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @default(now()) @map("updated_at")
+  deletedAt         DateTime?      @map("deleted_at")
+  refreshToken      RefreshToken[]
+  role              RoleName
   resetToken        String?
   resetTokenExpires DateTime?
 
-  session           Session[]
-
-  @@index([roleId])
+  session Session[]
 }
 
 model RefreshToken {
@@ -56,7 +44,7 @@ model Menu {
   price       Float
   description String
   imageUrl    String?    @map("image_url")
-  status      Boolean    @default(true)
+  status      Status     @default(active)
   stock       Int        @default(0)
   createdAt   DateTime   @default(now()) @map("created_at")
   updatedAt   DateTime   @default(now()) @map("updated_at")
@@ -67,7 +55,7 @@ model Menu {
 
 model Session {
   id        Int      @id @default(autoincrement())
-  sessionId String   @unique  
+  sessionId String   @unique
   userId    Int      @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
@@ -85,4 +73,9 @@ enum RoleName {
 enum Categories {
   food
   beverages
+}
+
+enum Status {
+  active
+  inactive
 }
