@@ -6,30 +6,74 @@ import {
 import { ERROR_MESSAGES } from "@/utils/errorMessage";
 import { hashPassword } from "@/utils/hashPassword";
 import sanitizeData from "@/utils/sanitize";
-import { userSelect } from "@/utils/selectOptions";
+import { Prisma } from "@prisma/client";
 import prisma from "db/client";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { UserData, UserSchema } from "schemas/userSchema";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") ?? "1", 10);
+    const limit = parseInt(searchParams.get("limit") ?? "10", 10);
+    const search = searchParams.get("search") ?? "";
+
+    if (isNaN(page) || page < 1 || isNaN(limit) || limit < 1) {
+      return NextResponse.json(
+        { success: false, error: "Invalid pagination parameters" },
+        { status: 400 }
+      );
+    }
+
+    const offset = (page - 1) * limit;
+
+    const whereCondition: Prisma.UsersWhereInput = {
+      deletedAt: null,
+      fullName: search
+        ? {
+            contains: search,
+            mode: Prisma.QueryMode.insensitive,
+          }
+        : undefined,
+    };
+
     const users = await prisma.users.findMany({
-      where: {
-        deletedAt: null,
+      where: whereCondition,
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        fullName: true,
+        role: true,
+        status: true,
       },
-      select: userSelect,
+      skip: offset,
+      take: limit,
+      orderBy: { deletedAt: "desc" },
     });
+
+    const totalUsers = await prisma.users.count({ where: whereCondition });
 
     return NextResponse.json(
       {
         success: true,
-        data: users,
+        data: {
+          total_users: totalUsers,
+          total_pages: Math.ceil(totalUsers / limit),
+          page,
+          limit,
+          users,
+        },
         message: "Users retrieved successfully",
       },
       { status: 200 }
     );
   } catch (error) {
-    return handleError(error, ERROR_MESSAGES.PROCESS_FAILED);
+    console.error("Error in GET /api/users:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to retrieve users" },
+      { status: 500 }
+    );
   }
 }
 
@@ -67,7 +111,11 @@ export async function POST(request: Request) {
     }
 
     const user = await prisma.users.create({
-      data: validatedData,
+      data: {
+        ...validatedData,
+        role: "user",
+        status: "active",
+      },
       select: {
         id: true,
         username: true,

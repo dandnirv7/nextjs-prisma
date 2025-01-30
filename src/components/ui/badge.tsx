@@ -1,59 +1,35 @@
-import React from "react";
+import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from '@/lib/utils'
 
-type BadgeProps = {
-  children: React.ReactNode;
-  variant?:
-    | "default"
-    | "secondary"
-    | "success"
-    | "danger"
-    | "warning"
-    | "info"
-    | "outline"
-    | "shadow";
-  size?: "small" | "default" | "large";
-  className?: string;
-  [key: string]: unknown;
-};
+const badgeVariants = cva(
+  'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+  {
+    variants: {
+      variant: {
+        default:
+          'border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80',
+        secondary:
+          'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        destructive:
+          'border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80',
+        outline: 'text-foreground',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+)
 
-const Badge = ({
-  children,
-  variant = "default",
-  size = "default",
-  className = "",
-  ...props
-}: BadgeProps) => {
-  const baseStyles = "inline-flex items-center rounded-md font-medium";
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
 
-  const variants = {
-    default: "bg-primary text-white",
-    secondary: "bg-gray-100 text-gray-800",
-    success: "bg-green-100 font-semibold border-gray",
-    danger: "bg-red-100 text-red-800",
-    warning: "bg-yellow-100 text-yellow-800",
-    info: "bg-blue-100 text-blue-800",
-    outline: "border border-gray-300 text-gray-700 bg-white",
-    shadow:
-      "shadow shadow-md shadow-black/40 bg-neutral-700/40 hover:bg-neutral-700 text-white ",
-  };
-
-  const sizes = {
-    small: "px-2 py-0.5 text-xs",
-    default: "px-2.5 py-0.5 text-sm",
-    large: "px-3 py-1 text-base",
-  };
-
-  const variantStyle = variants[variant] || variants.default;
-  const sizeStyle = sizes[size] || sizes.default;
-
+function Badge({ className, variant, ...props }: BadgeProps) {
   return (
-    <span
-      className={`${baseStyles} ${variantStyle} ${sizeStyle} ${className}`}
-      {...props}
-    >
-      {children}
-    </span>
-  );
-};
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  )
+}
 
-export default Badge;
+export { Badge, badgeVariants }

@@ -18,6 +18,8 @@ export const UserSchema = z.object({
       message:
         "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character",
     }),
+  role: z.enum(["admin", "user"]).optional(),
+  status: z.enum(["active", "inactive"]).optional(),
 });
 
 export type UserData = z.infer<typeof UserSchema>;
