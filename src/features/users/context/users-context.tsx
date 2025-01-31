@@ -2,15 +2,15 @@
 
 import React, { useState } from "react";
 import useDialogState from "@/hooks/use-dialog-state";
-import { Users } from "@prisma/client";
+import { User } from "@/features/users/data/schema";
 
 type UsersDialogType = "add" | "edit" | "delete";
 
 interface UsersContextType {
   open: UsersDialogType | null;
   setOpen: (str: UsersDialogType | null) => void;
-  currentRow: Users | null;
-  setCurrentRow: React.Dispatch<React.SetStateAction<Users | null>>;
+  currentRow: User | null;
+  setCurrentRow: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const UsersContext = React.createContext<UsersContextType | null>(null);
@@ -21,7 +21,7 @@ interface Props {
 
 export default function UsersProvider({ children }: Props) {
   const [open, setOpen] = useDialogState<UsersDialogType>(null);
-  const [currentRow, setCurrentRow] = useState<Users | null>(null);
+  const [currentRow, setCurrentRow] = useState<User | null>(null);
 
   return (
     <UsersContext value={{ open, setOpen, currentRow, setCurrentRow }}>

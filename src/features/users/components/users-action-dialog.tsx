@@ -21,11 +21,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { userTypes } from "@/features/users/data/data";
+import {
+  AddUserForm,
+  addUserSchema,
+  EditUserForm,
+  editUserSchema,
+  User,
+} from "@/features/users/data/schema";
+import { addUser } from "@/features/users/utils/addUser";
+import { editUser } from "@/features/users/utils/editUser";
 import { toast } from "@/hooks/use-toast";
+import { ERROR_MESSAGES } from "@/utils/errorMessage";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { userTypes } from "../data/data";
-import { type UserForm, User, userFormSchema } from "../data/schema";
 
 interface Props {
   currentRow?: User;
@@ -35,8 +45,11 @@ interface Props {
 
 export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
   const isEdit = !!currentRow;
-  const form = useForm<UserForm>({
-    resolver: zodResolver(userFormSchema),
+  const formSchema = isEdit ? editUserSchema : addUserSchema;
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const form = useForm<AddUserForm | EditUserForm>({
+    resolver: zodResolver(formSchema),
     defaultValues: isEdit
       ? {
           ...currentRow,
@@ -55,17 +68,31 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
         },
   });
 
-  const onSubmit = (values: UserForm) => {
-    form.reset();
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>
-      ),
-    });
-    onOpenChange(false);
+  const onSubmit = async (values: EditUserForm | AddUserForm) => {
+    setIsLoading(true);
+    try {
+      isEdit
+        ? await editUser(values as EditUserForm, currentRow!.id)
+        : await addUser(values as AddUserForm);
+
+      form.reset();
+      toast({
+        title: isEdit
+          ? "User updated successfully!"
+          : "User added successfully!",
+        description: isEdit
+          ? "The user information has been successfully updated."
+          : "A new user has been successfully added.",
+      });
+
+      onOpenChange(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(ERROR_MESSAGES.CREATE_FAILED);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const isPasswordTouched = !!form.formState.dirtyFields.password;
@@ -97,9 +124,9 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 control={form.control}
                 name="fullName"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                  <FormItem className="grid items-center grid-cols-6 space-y-0 gap-x-4 gap-y-1">
                     <FormLabel className="col-span-2 text-right">
-                      Name
+                      Full Name
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -112,12 +139,11 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                  <FormItem className="grid items-center grid-cols-6 space-y-0 gap-x-4 gap-y-1">
                     <FormLabel className="col-span-2 text-right">
                       Username
                     </FormLabel>
@@ -136,7 +162,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                  <FormItem className="grid items-center grid-cols-6 space-y-0 gap-x-4 gap-y-1">
                     <FormLabel className="col-span-2 text-right">
                       Email
                     </FormLabel>
@@ -156,7 +182,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 control={form.control}
                 name="role"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                  <FormItem className="grid items-center grid-cols-6 space-y-0 gap-x-4 gap-y-1">
                     <FormLabel className="col-span-2 text-right">
                       Role
                     </FormLabel>
@@ -178,7 +204,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                  <FormItem className="grid items-center grid-cols-6 space-y-0 gap-x-4 gap-y-1">
                     <FormLabel className="col-span-2 text-right">
                       Password
                     </FormLabel>
@@ -197,7 +223,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 control={form.control}
                 name="confirmPassword"
                 render={({ field }) => (
-                  <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                  <FormItem className="grid items-center grid-cols-6 space-y-0 gap-x-4 gap-y-1">
                     <FormLabel className="col-span-2 text-right">
                       Confirm Password
                     </FormLabel>
@@ -217,8 +243,12 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           </Form>
         </ScrollArea>
         <DialogFooter>
-          <Button type="submit" form="user-form">
-            Save changes
+          <Button
+            type="submit"
+            form="user-form"
+            className={`${isLoading ? "opacity-50" : "opacity-100"}`}
+          >
+            {isLoading ? "Saving..." : "Save changes"}
           </Button>
         </DialogFooter>
       </DialogContent>

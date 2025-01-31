@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { IconAlertTriangle } from "@tabler/icons-react";
-import { toast } from "@/hooks/use-toast";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ConfirmDialog } from "@/components/confirm-dialog";
-import { User } from "../data/schema";
+import { User } from "@/features/users/data/schema";
+import { toast } from "@/hooks/use-toast";
+import { ERROR_MESSAGES } from "@/utils/errorMessage";
+import { IconAlertTriangle } from "@tabler/icons-react";
+import { useState } from "react";
 
 interface Props {
   open: boolean;
@@ -18,20 +19,30 @@ interface Props {
 export function UsersDeleteDialog({ open, onOpenChange, currentRow }: Props) {
   const [value, setValue] = useState("");
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (value.trim() !== currentRow.username) return;
+    try {
+      const response = await fetch(`/api/users/${currentRow.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    onOpenChange(false);
-    toast({
-      title: "The following user has been deleted:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">
-            {JSON.stringify(currentRow, null, 2)}
-          </code>
-        </pre>
-      ),
-    });
+      if (!response.ok) {
+        throw new Error(`Failed to delete user with ID: ${currentRow.id}`);
+      }
+
+      onOpenChange(false);
+      toast({
+        title: "The following user has been deleted:",
+        description: `${currentRow.username} (${currentRow.fullName}) has been successfully deleted.`,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(ERROR_MESSAGES.DELETE_FAILED);
+      }
+    }
   };
 
   return (

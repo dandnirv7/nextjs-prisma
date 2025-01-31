@@ -88,6 +88,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                 const isSelected = selectedValues.has(option.value);
                 return (
                   <CommandItem
+                    className="flex gap-2"
                     key={option.value}
                     onSelect={() => {
                       if (isSelected) {
@@ -103,7 +104,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                   >
                     <div
                       className={cn(
-                        "flex h-4 w-4 gap-2 items-center justify-center rounded-sm border border-primary",
+                        "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                         isSelected
                           ? "bg-primary text-primary-foreground"
                           : "opacity-50 [&_svg]:invisible"
